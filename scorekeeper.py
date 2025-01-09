@@ -3,14 +3,17 @@ from tkinter import messagebox
 import csv
 from datetime import datetime
 
+
 class ScoreKeeper:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Scorekeeper")
-        self.root.attributes('-fullscreen', True)
+
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        self.root.geometry(f"{screen_width}x{screen_height}")
         self.root.configure(bg='white')
 
-        # UI for initial input
         self.create_input_ui()
         self.root.mainloop()
 
@@ -93,8 +96,7 @@ class ScoreKeeper:
             if score_diff >= 2:
                 winner = self.player1_name if self.player1_score > self.player2_score else self.player2_name
                 self.save_game_history()
-                messagebox.showinfo("Game Over", f"{winner} wins!")
-                self.reset_game()
+                self.show_game_over_dialog(winner)
 
     def save_game_history(self):
         date = datetime.now().strftime("%m%d%y")
@@ -102,10 +104,24 @@ class ScoreKeeper:
             writer = csv.writer(file)
             writer.writerow([self.player1_name, self.player2_name, self.player1_score, self.player2_score, date])
 
+    def show_game_over_dialog(self, winner):
+        response = messagebox.askquestion("Game Over", f"{winner} wins! Would you like a rematch?\nClick 'No' to create a new game.", icon='question')
+        if response == "yes":  # "Rematch" chosen
+            self.reset_game()
+        elif response == "no":  # "New Game" chosen
+            self.new_game()
+
     def reset_game(self):
         self.player1_score = 0
         self.player2_score = 0
         self.update_scores()
+
+    def new_game(self):
+        self.left_frame.destroy()
+        self.right_frame.destroy()
+        self.divider.destroy()
+        self.create_input_ui()
+
 
 if __name__ == "__main__":
     ScoreKeeper()
