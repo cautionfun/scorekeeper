@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
+from PIL import Image, ImageTk  # Install Pillow for image handling
 import csv
 from datetime import datetime
 import os
@@ -17,6 +18,13 @@ class ScoreKeeper:
 
         self.names_file = "player_names.csv"
         self.player_names = self.load_player_names()  # Load previously entered names
+
+        self.deadmans_image = Image.open("deadmans.png")
+        self.deadmans_image = self.deadmans_image.resize((100, 100))  # Resize for display
+        self.deadmans_photo = ImageTk.PhotoImage(self.deadmans_image)
+
+        self.deadmans_label_left = None  # Label to display image on player 1's side
+        self.deadmans_label_right = None  # Label to display image on player 2's side
 
         self.create_input_ui()
         self.root.mainloop()
@@ -115,6 +123,39 @@ class ScoreKeeper:
     def update_scores(self):
         self.player1_score_label.config(text=str(self.player1_score))
         self.player2_score_label.config(text=str(self.player2_score))
+        self.check_deadmans_condition()
+
+    def check_deadmans_condition(self):
+        threshold = self.point_goal - 1
+
+        if self.player1_score >= threshold or self.player2_score >= threshold:
+            if self.player1_score == self.player2_score:
+                self.hide_deadmans_image()
+            else:
+                if self.player1_score > self.player2_score:
+                    self.show_deadmans_image(self.right_frame, "right")  # Player 2 is losing
+                elif self.player2_score > self.player1_score:
+                    self.show_deadmans_image(self.left_frame, "left")  # Player 1 is losing
+        else:
+            self.hide_deadmans_image()
+
+
+    def show_deadmans_image(self, frame, side):
+        self.hide_deadmans_image()  # Ensure previous image is removed
+        if side == "left":
+            self.deadmans_label_left = tk.Label(frame, image=self.deadmans_photo, bg='white')
+            self.deadmans_label_left.pack()
+        elif side == "right":
+            self.deadmans_label_right = tk.Label(frame, image=self.deadmans_photo, bg='white')
+            self.deadmans_label_right.pack()
+
+    def hide_deadmans_image(self):
+        if self.deadmans_label_left:
+            self.deadmans_label_left.destroy()
+            self.deadmans_label_left = None
+        if self.deadmans_label_right:
+            self.deadmans_label_right.destroy()
+            self.deadmans_label_right = None
 
     def check_winner(self):
         if self.player1_score >= self.point_goal or self.player2_score >= self.point_goal:
