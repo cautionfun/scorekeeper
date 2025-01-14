@@ -1,7 +1,8 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 import csv
 from datetime import datetime
+import os
 
 
 class ScoreKeeper:
@@ -14,20 +15,42 @@ class ScoreKeeper:
         self.root.geometry(f"{screen_width}x{screen_height}")
         self.root.configure(bg='white')
 
+        self.names_file = "player_names.csv"
+        self.player_names = self.load_player_names()  # Load previously entered names
+
         self.create_input_ui()
         self.root.mainloop()
+
+    def load_player_names(self):
+        if not os.path.exists(self.names_file):
+            return []
+
+        with open(self.names_file, "r") as file:
+            reader = csv.reader(file)
+            return [row[0] for row in reader]
+
+    def save_player_name(self, name):
+        if name and name not in self.player_names:
+            self.player_names.append(name)
+            with open(self.names_file, "a", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerow([name])
 
     def create_input_ui(self):
         self.input_frame = tk.Frame(self.root, bg='white')
         self.input_frame.place(relx=0.5, rely=0.5, anchor='center')
 
         tk.Label(self.input_frame, text="Player 1 Name:", font=("Helvetica", 24), bg='white').grid(row=0, column=0, padx=10, pady=10)
-        self.player1_name_entry = tk.Entry(self.input_frame, font=("Helvetica", 24))
-        self.player1_name_entry.grid(row=0, column=1, padx=10, pady=10)
+        self.player1_name_var = tk.StringVar()
+        self.player1_name_dropdown = ttk.Combobox(self.input_frame, textvariable=self.player1_name_var, font=("Helvetica", 24))
+        self.player1_name_dropdown['values'] = self.player_names
+        self.player1_name_dropdown.grid(row=0, column=1, padx=10, pady=10)
 
         tk.Label(self.input_frame, text="Player 2 Name:", font=("Helvetica", 24), bg='white').grid(row=1, column=0, padx=10, pady=10)
-        self.player2_name_entry = tk.Entry(self.input_frame, font=("Helvetica", 24))
-        self.player2_name_entry.grid(row=1, column=1, padx=10, pady=10)
+        self.player2_name_var = tk.StringVar()
+        self.player2_name_dropdown = ttk.Combobox(self.input_frame, textvariable=self.player2_name_var, font=("Helvetica", 24))
+        self.player2_name_dropdown['values'] = self.player_names
+        self.player2_name_dropdown.grid(row=1, column=1, padx=10, pady=10)
 
         tk.Label(self.input_frame, text="Point Total to Win:", font=("Helvetica", 24), bg='white').grid(row=2, column=0, padx=10, pady=10)
         self.point_goal_entry = tk.Entry(self.input_frame, font=("Helvetica", 24))
@@ -37,13 +60,16 @@ class ScoreKeeper:
         submit_button.grid(row=3, column=0, columnspan=2, pady=20)
 
     def start_game(self):
-        player1_name = self.player1_name_entry.get()
-        player2_name = self.player2_name_entry.get()
+        player1_name = self.player1_name_var.get()
+        player2_name = self.player2_name_var.get()
         point_goal = self.point_goal_entry.get()
 
         if not player1_name or not player2_name or not point_goal.isdigit():
             messagebox.showerror("Error", "Please enter valid inputs for all fields.")
             return
+
+        self.save_player_name(player1_name)
+        self.save_player_name(player2_name)
 
         self.player1_name = player1_name
         self.player2_name = player2_name
